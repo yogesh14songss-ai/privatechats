@@ -5,14 +5,15 @@
 <title>🔥 Chat App</title>
 
 <style>
+*{box-sizing:border-box}
 body{
     margin:0;
-    font-family:Arial;
+    font-family:Arial, sans-serif;
     background:#0b141a;
     color:white;
 }
 
-/* CHAT */
+/* LAYOUT */
 .chat{
     display:flex;
     flex-direction:column;
@@ -21,13 +22,15 @@ body{
     margin:auto;
 }
 
+/* HEADER */
 .header{
     background:#202c33;
-    padding:15px;
+    padding:14px;
     text-align:center;
     font-weight:bold;
 }
 
+/* CHAT BOX */
 .box{
     flex:1;
     overflow-y:auto;
@@ -36,8 +39,8 @@ body{
 
 /* MESSAGE */
 .msg{
-    padding:10px;
-    margin:6px;
+    padding:10px 12px;
+    margin:6px 0;
     border-radius:12px;
     max-width:60%;
     word-break:break-word;
@@ -58,6 +61,7 @@ body{
     gap:8px;
     padding:10px;
     background:#202c33;
+    align-items:center;
 }
 
 .input input[type="text"]{
@@ -77,6 +81,7 @@ button{
     color:white;
     padding:10px;
     border-radius:50%;
+    cursor:pointer;
 }
 
 /* POPUP */
@@ -92,13 +97,15 @@ button{
 .card{
     background:#111b21;
     padding:20px;
-    border-radius:10px;
+    border-radius:12px;
     text-align:center;
+    width:300px;
 }
 
 /* MOBILE */
 @media(max-width:600px){
-    .msg{max-width:85%;}
+    .chat{max-width:100%;}
+    .msg{max-width:80%;}
 }
 </style>
 </head>
@@ -116,7 +123,7 @@ button{
 
 <div class="chat">
 
-<div id="title" class="header"></div>
+<div id="title" class="header">Chat</div>
 
 <div id="chat" class="box"></div>
 
@@ -136,6 +143,7 @@ button{
 
 <script>
 
+// 🔥 CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyCaL_bT7HJRsYf7mhTelXBeNiJV0MQDXIs",
     authDomain: "chat-app-88556.firebaseapp.com",
@@ -155,30 +163,28 @@ const chatBox = document.getElementById("chat");
 const title = document.getElementById("title");
 
 // STORAGE
-let user = localStorage.getItem("user");
-let room = localStorage.getItem("room");
+let user = localStorage.getItem("user") || "";
+let room = localStorage.getItem("room") || "";
 
-// ROOM
+// ROOM SET
 if(!room){
-    room = prompt("Room name:");
-    localStorage.setItem("room",room);
+    room = prompt("Enter Room Name:") || "default";
+    localStorage.setItem("room", room);
 }
-
 title.innerText = "Room: " + room;
 
-// USER
+// USER CHECK
 if(user){
-    overlay.style.display="none";
+    overlay.style.display = "none";
 }
 
 // SAVE NAME
 function saveName(){
     let name = nameInput.value.trim();
-    if(name==="") return alert("Enter name");
-
+    if(!name) return alert("Enter name");
     user = name;
-    localStorage.setItem("user",user);
-    overlay.style.display="none";
+    localStorage.setItem("user", user);
+    overlay.style.display = "none";
 }
 
 // EMOJI
@@ -186,22 +192,16 @@ function addEmoji(){
     msgInput.value += "😀";
 }
 
-// SEND
+// SEND MESSAGE
 function sendMsg(){
-
     let text = msgInput.value.trim();
     let file = imgInput.files[0];
 
-    if(!user){
-        alert("Enter name first");
-        return;
-    }
-
-    if(text === "" && !file) return;
+    if(!user) return alert("Enter name first");
+    if(!text && !file) return;
 
     if(file){
         let reader = new FileReader();
-
         reader.onload = function(){
             db.ref("rooms/"+room).push({
                 user:user,
@@ -209,7 +209,6 @@ function sendMsg(){
                 image:reader.result
             });
         };
-
         reader.readAsDataURL(file);
     } else {
         db.ref("rooms/"+room).push({
@@ -223,18 +222,11 @@ function sendMsg(){
 }
 
 // RECEIVE
-db.ref("rooms/"+room).on("child_added",function(s){
-
-    let d = s.val();
+db.ref("rooms/"+room).on("child_added", function(snap){
+    let d = snap.val();
 
     let div = document.createElement("div");
-    div.classList.add("msg");
-
-    if(d.user === user){
-        div.classList.add("me");
-    } else {
-        div.classList.add("other");
-    }
+    div.className = "msg " + (d.user === user ? "me" : "other");
 
     div.innerHTML = "<b>"+d.user+"</b><br>"+(d.text || "");
 
@@ -244,7 +236,6 @@ db.ref("rooms/"+room).on("child_added",function(s){
 
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
-
 });
 
 </script>
