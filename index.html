@@ -5,43 +5,36 @@
 <title>🔥 Chat App</title>
 
 <style>
-*{box-sizing:border-box}
 body{
     margin:0;
-    font-family:Arial, sans-serif;
+    font-family:Arial;
     background:#0b141a;
     color:white;
 }
 
-/* LAYOUT */
 .chat{
     display:flex;
     flex-direction:column;
     height:100vh;
-    max-width:900px;
-    margin:auto;
 }
 
-/* HEADER */
 .header{
     background:#202c33;
-    padding:14px;
+    padding:15px;
     text-align:center;
     font-weight:bold;
 }
 
-/* CHAT BOX */
 .box{
     flex:1;
     overflow-y:auto;
-    padding:12px;
+    padding:10px;
 }
 
-/* MESSAGE */
 .msg{
-    padding:10px 12px;
-    margin:6px 0;
-    border-radius:12px;
+    padding:10px;
+    margin:5px;
+    border-radius:10px;
     max-width:60%;
     word-break:break-word;
 }
@@ -55,24 +48,18 @@ body{
     background:#202c33;
 }
 
-/* INPUT */
 .input{
     display:flex;
-    gap:8px;
     padding:10px;
     background:#202c33;
-    align-items:center;
+    gap:5px;
 }
 
-.input input[type="text"]{
+input{
     flex:1;
-    padding:12px;
+    padding:10px;
     border:none;
-    border-radius:25px;
-}
-
-.input input[type="file"]{
-    display:none;
+    border-radius:20px;
 }
 
 button{
@@ -81,10 +68,9 @@ button{
     color:white;
     padding:10px;
     border-radius:50%;
-    cursor:pointer;
 }
 
-/* POPUP */
+/* overlay */
 .overlay{
     position:fixed;
     inset:0;
@@ -97,22 +83,18 @@ button{
 .card{
     background:#111b21;
     padding:20px;
-    border-radius:12px;
-    text-align:center;
-    width:300px;
+    border-radius:10px;
 }
 
-/* MOBILE */
+/* mobile */
 @media(max-width:600px){
-    .chat{max-width:100%;}
-    .msg{max-width:80%;}
+    .msg{max-width:85%;}
 }
 </style>
 </head>
 
 <body>
 
-<!-- USERNAME -->
 <div id="overlay" class="overlay">
 <div class="card">
 <h3>Enter Name</h3>
@@ -123,27 +105,24 @@ button{
 
 <div class="chat">
 
-<div id="title" class="header">Chat</div>
+<div id="title" class="header"></div>
 
 <div id="chat" class="box"></div>
 
 <div class="input">
 <button onclick="addEmoji()">😀</button>
-<label for="img">📎</label>
+<input id="msg">
 <input type="file" id="img">
-<input id="msg" placeholder="Type message...">
 <button onclick="sendMsg()">➤</button>
 </div>
 
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
 
-// 🔥 CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyCaL_bT7HJRsYf7mhTelXBeNiJV0MQDXIs",
     authDomain: "chat-app-88556.firebaseapp.com",
@@ -154,88 +133,81 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ELEMENTS
-const overlay = document.getElementById("overlay");
-const nameInput = document.getElementById("name");
-const msgInput = document.getElementById("msg");
-const imgInput = document.getElementById("img");
-const chatBox = document.getElementById("chat");
-const title = document.getElementById("title");
+let user = localStorage.getItem("user");
+let room = localStorage.getItem("room");
 
-// STORAGE
-let user = localStorage.getItem("user") || "";
-let room = localStorage.getItem("room") || "";
-
-// ROOM SET
 if(!room){
-    room = prompt("Enter Room Name:") || "default";
-    localStorage.setItem("room", room);
+    room = prompt("Room name:");
+    localStorage.setItem("room",room);
 }
-title.innerText = "Room: " + room;
 
-// USER CHECK
+document.getElementById("title").innerText="Room: "+room;
+
 if(user){
-    overlay.style.display = "none";
+    document.getElementById("overlay").style.display="none";
 }
 
-// SAVE NAME
 function saveName(){
-    let name = nameInput.value.trim();
-    if(!name) return alert("Enter name");
-    user = name;
-    localStorage.setItem("user", user);
-    overlay.style.display = "none";
+    user=document.getElementById("name").value;
+    localStorage.setItem("user",user);
+    document.getElementById("overlay").style.display="none";
 }
 
-// EMOJI
 function addEmoji(){
-    msgInput.value += "😀";
+    document.getElementById("msg").value+="😀";
 }
 
-// SEND MESSAGE
 function sendMsg(){
-    let text = msgInput.value.trim();
-    let file = imgInput.files[0];
 
-    if(!user) return alert("Enter name first");
-    if(!text && !file) return;
+    let msg=document.getElementById("msg").value;
+    let file=document.getElementById("img").files[0];
 
     if(file){
-        let reader = new FileReader();
-        reader.onload = function(){
+        let reader=new FileReader();
+
+        reader.onload=function(){
             db.ref("rooms/"+room).push({
                 user:user,
-                text:text,
+                text:msg,
                 image:reader.result
             });
         };
+
         reader.readAsDataURL(file);
-    } else {
+    }
+    else{
         db.ref("rooms/"+room).push({
             user:user,
-            text:text
+            text:msg
         });
     }
 
-    msgInput.value="";
-    imgInput.value="";
+    document.getElementById("msg").value="";
+    document.getElementById("img").value="";
 }
 
-// RECEIVE
-db.ref("rooms/"+room).on("child_added", function(snap){
-    let d = snap.val();
+db.ref("rooms/"+room).on("child_added",function(snap){
 
-    let div = document.createElement("div");
-    div.className = "msg " + (d.user === user ? "me" : "other");
+    let d=snap.val();
 
-    div.innerHTML = "<b>"+d.user+"</b><br>"+(d.text || "");
+    let div=document.createElement("div");
+    div.classList.add("msg");
 
-    if(d.image){
-        div.innerHTML += `<br><img src="${d.image}" style="max-width:150px;border-radius:10px;">`;
+    if(d.user==user){
+        div.classList.add("me");
+    }else{
+        div.classList.add("other");
     }
 
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    div.innerHTML="<b>"+d.user+"</b><br>"+(d.text||"");
+
+    if(d.image){
+        div.innerHTML+=`<br><img src="${d.image}" width="150">`;
+    }
+
+    document.getElementById("chat").appendChild(div);
+    chat.scrollTop=chat.scrollHeight;
+
 });
 
 </script>
