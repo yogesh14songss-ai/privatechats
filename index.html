@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🔥 Firebase Room Chat</title>
 
 <style>
@@ -9,7 +9,39 @@ body{
     font-family:Arial;
     background:#0b141a;
     color:white;
+}.input {
+    position: sticky;
+    bottom: 0;
 }
+    .msg {
+    max-width: 80%;
+    word-wrap: break-word;
+    }
+    @media(max-width:600px){
+
+    .chat {
+        width: 100%;
+    }
+
+    .msg {
+        max-width: 85%;
+        font-size: 14px;
+    }
+
+    input {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    button {
+        width: 40px;
+        height: 40px;
+    }
+
+    .header {
+        font-size: 16px;
+    }
+    }
 
 .chat{
     display:flex;
